@@ -1,41 +1,42 @@
 """
-Configuration globale de l'application
+Configuration - Responsive
 """
+import os
 
-# Constantes physiques
-G_STANDARD = 9.81  # m/s²
-PATM_STANDARD = 101325  # Pa
-TEMP_STANDARD = 20  # °C
+# Application
+APP_TITLE = "Calculateur HMT Professionnel v2.0"
 
-# Limites par défaut
-DEFAULT_VMIN = 0.5  # m/s
-DEFAULT_VMAX = 3.0  # m/s
+# Chemins
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, 'data')
+SYSTEM_PUMPS_DIR = os.path.join(DATA_DIR, 'system_pumps')
+SAMPLE_PUMPS_DIR = os.path.join(DATA_DIR, 'sample_pumps')
 
-# Paramètres de calcul
+# Assets
+ASSETS_DIR = os.path.join(BASE_DIR, 'assets')
+ICONS_DIR = os.path.join(ASSETS_DIR, 'icons')
+LOGO_PATH = os.path.join(ICONS_DIR, 'logo.png')
+LOGO_SMALL_PATH = os.path.join(ICONS_DIR, 'logo_small.png')
+LOGO_ICO_PATH = os.path.join(ICONS_DIR, 'logo.ico')
+
+# Créer les dossiers s'ils n'existent pas
+os.makedirs(SYSTEM_PUMPS_DIR, exist_ok=True)
+os.makedirs(SAMPLE_PUMPS_DIR, exist_ok=True)
+os.makedirs(ICONS_DIR, exist_ok=True)
+
+# Vitesses limites
+DEFAULT_VMIN = 0.5
+DEFAULT_VMAX = 3.0
+
+# Méthodes
 FRICTION_METHODS = ['Colebrook-White', 'Haaland', 'Swamee-Jain']
 LOSS_METHODS = ['Coefficients', 'Pourcentage']
 
-# Interface utilisateur
-WINDOW_SIZE = "1400x900"
-APP_TITLE = "Calculateur HMT - Version Professionnelle"
+# Monnaies
+CURRENCIES = ['DZD', 'EUR', 'USD', 'MAD', 'TND']
 
-# Couleurs (Theme)
-COLORS = {
-    'primary': '#2196F3',
-    'secondary': '#FFC107',
-    'success': '#4CAF50',
-    'danger': '#F44336',
-    'warning': '#FF9800',
-    'info': '#00BCD4',
-    'background': '#f0f0f0',
-    'text': '#212121'
-}
-
-# Formats d'export
-EXPORT_FORMATS = ['txt', 'json', 'csv', 'pdf']
-
-# NPSH
-DEFAULT_NPSH_MARGIN = 0.5  # m
-
-# Économique
-CURRENCIES = ['DZD', 'EUR', 'USD']
+# Responsive breakpoints
+BREAKPOINT_VERY_SMALL = 1024
+BREAKPOINT_SMALL = 1366
+BREAKPOINT_MEDIUM = 1600
+BREAKPOINT_LARGE = 1920
