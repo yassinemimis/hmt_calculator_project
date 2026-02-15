@@ -31,9 +31,16 @@ class OptimalTab(QWidget):
         self.npsh_margin_input = QLineEdit("0.5")
         npsh_layout.addWidget(self.npsh_margin_input, 0, 1)
         
-        npsh_layout.addWidget(QLabel("Cote surface libre aspiration Zs (m):"), 1, 0)
-        self.zs_input = QLineEdit("0")
-        npsh_layout.addWidget(self.zs_input, 1, 1)
+        npsh_layout.addWidget(QLabel("Cote pompe Zpompe (m):"), 1, 0)
+        self.zpompe_input = QLineEdit("0")
+        self.zpompe_input.textChanged.connect(self.update_hasp)
+        npsh_layout.addWidget(self.zpompe_input, 1, 1)
+        
+        npsh_layout.addWidget(QLabel("Hauteur d'aspiration Hasp (m):"), 2, 0)
+        self.hasp_display = QLineEdit("0.0")
+        self.hasp_display.setReadOnly(True)
+        self.hasp_display.setStyleSheet("background-color: #f0f0f0; font-weight: bold;")
+        npsh_layout.addWidget(self.hasp_display, 2, 1)
         
         npsh_group.setLayout(npsh_layout)
         layout.addWidget(npsh_group)
@@ -59,6 +66,16 @@ class OptimalTab(QWidget):
         
         layout.addStretch()
     
+    def update_hasp(self):
+        """Calcul automatique de Hasp = Zpompe - Zdep"""
+        try:
+            Zpompe = float(self.zpompe_input.text())
+            Zdep = float(self.main_window.input_tab.zdep_input.text())
+            Hasp = Zpompe - Zdep
+            self.hasp_display.setText(f"{Hasp:.4f}")
+        except ValueError:
+            self.hasp_display.setText("0.0")
+    
     def find_optimal_solution(self):
         """Trouve la solution optimale"""
         if not self.main_window.hmt_results:
@@ -74,7 +91,12 @@ class OptimalTab(QWidget):
         try:
             # Paramètres
             margin_npsh = float(self.npsh_margin_input.text())
-            Zs = float(self.zs_input.text())
+            Zpompe = float(self.zpompe_input.text())
+            Zdep = float(self.main_window.input_tab.zdep_input.text())
+            
+            # Calcul de Hasp
+            Hasp = Zpompe - Zdep
+            
             Q_nominal = float(self.main_window.input_tab.q_input.text())
             
             # Paramètres de pertes
@@ -98,7 +120,7 @@ class OptimalTab(QWidget):
                 self.main_window.system_curves,
                 Q_nominal,
                 margin_npsh,
-                Zs,
+                Hasp,
                 **kwargs
             )
             

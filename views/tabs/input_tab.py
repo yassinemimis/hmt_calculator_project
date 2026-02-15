@@ -162,27 +162,27 @@ class InputTab(QWidget):
         )
         
         # Altitude
-        self.zalt_input = QLineEdit()
-        self.zalt_input.setPlaceholderText("Ex: 1000")
-        self.add_field_with_help(
-            grid, 1,
-            "OU Altitude Zalt (m) :",
-            self.zalt_input,
-            "<b>Altitude du site (Zalt)</b><br><br>"
-            "Hauteur au-dessus du niveau de la mer.<br><br>"
-            "<b>Usage :</b> Permet de calculer automatiquement Patm<br>"
-            "<b>Formule :</b> Patm = P₀ × (1 - 0.0065×h/288.15)^5.255<br>"
-            "<b>Exemple :</b><br>"
-            "• Alger : ~0-200 m<br>"
-            "• Sétif : ~1100 m<br>"
-            "• Tamanrasset : ~1400 m<br><br>"
-            "💡 <i>Cliquez 'Calculer Patm' après saisie</i>"
-        )
+        # self.zalt_input = QLineEdit()
+        # self.zalt_input.setPlaceholderText("Ex: 1000")
+        # self.add_field_with_help(
+        #     grid, 1,
+        #     "OU Altitude Zalt (m) :",
+        #     self.zalt_input,
+        #     "<b>Altitude du site (Zalt)</b><br><br>"
+        #     "Hauteur au-dessus du niveau de la mer.<br><br>"
+        #     "<b>Usage :</b> Permet de calculer automatiquement Patm<br>"
+        #     "<b>Formule :</b> Patm = P₀ × (1 - 0.0065×h/288.15)^5.255<br>"
+        #     "<b>Exemple :</b><br>"
+        #     "• Alger : ~0-200 m<br>"
+        #     "• Sétif : ~1100 m<br>"
+        #     "• Tamanrasset : ~1400 m<br><br>"
+        #     "💡 <i>Cliquez 'Calculer Patm' après saisie</i>"
+        # )
         
-        calc_btn = QPushButton("Calculer Patm")
-        calc_btn.setProperty("class", "secondary")
-        calc_btn.clicked.connect(self.calculate_patm_from_altitude)
-        grid.addWidget(calc_btn, 1, 2)
+        # calc_btn = QPushButton("Calculer Patm")
+        # calc_btn.setProperty("class", "secondary")
+        # calc_btn.clicked.connect(self.calculate_patm_from_altitude)
+        # grid.addWidget(calc_btn, 1, 2)
         
         # g
         self.g_input = QLineEdit("9.81")
@@ -285,6 +285,7 @@ class InputTab(QWidget):
         
         # Température
         self.temp_input = QLineEdit("20")
+        self.temp_input.textChanged.connect(self.update_pv_from_temp)
         self.add_field_with_help(
             grid, 0,
             "Température T (°C) :",
@@ -343,8 +344,8 @@ class InputTab(QWidget):
             "<b>Valeurs :</b><br>"
             "• 10°C : 1228 Pa<br>"
             "• 20°C : 2338 Pa<br>"
-            "• 30°C : 4246 Pa<br>"
-            "• 40°C : 7384 Pa<br><br>"
+            "• 30°C : 4243 Pa<br>"
+            "• 40°C : 7375 Pa<br><br>"
             "<b>Usage :</b> Calcul du NPSH disponible (risque cavitation)<br><br>"
             "⚠️ <i>Critique pour éviter la cavitation de la pompe</i>"
         )
@@ -616,17 +617,26 @@ class InputTab(QWidget):
         else:
             self.create_percentage_input()
     
-    def calculate_patm_from_altitude(self):
-        try:
-            zalt = float(self.zalt_input.text())
-            patm = self.main_window.npsh_calculator.calculate_patm_from_altitude(zalt)
-            self.patm_input.setText(f"{patm:.2f}")
-            QMessageBox.information(self, "✓ Succès", 
-                                  f"Pression atmosphérique calculée :\n{patm:.2f} Pa")
-        except ValueError:
-            QMessageBox.warning(self, "⚠ Erreur", 
-                              "Veuillez entrer une altitude valide")
+    # def calculate_patm_from_altitude(self):
+    #     try:
+    #         zalt = float(self.zalt_input.text())
+    #         patm = self.main_window.npsh_calculator.calculate_patm_from_altitude(zalt)
+    #         self.patm_input.setText(f"{patm:.2f}")
+    #         QMessageBox.information(self, "✓ Succès", 
+    #                               f"Pression atmosphérique calculée :\n{patm:.2f} Pa")
+    #     except ValueError:
+    #         QMessageBox.warning(self, "⚠ Erreur", 
+    #                           "Veuillez entrer une altitude valide")
     
+    def update_pv_from_temp(self):
+   
+        try:
+            import math
+            T = float(self.temp_input.text())
+            Pv = 610.78 * math.exp(17.27 * T / (T + 237.3))
+            self.pv_input.setText(f"{Pv:.0f}")
+        except ValueError:
+            pass  
     def validate_data(self):
         try:
             self.update_models()
@@ -662,7 +672,6 @@ class InputTab(QWidget):
     def reset(self):
         """Réinitialise"""
         self.patm_input.setText("101325")
-        self.zalt_input.clear()
         self.g_input.setText("9.81")
         self.lasp_input.setText("10")
         self.lref_input.setText("50")
