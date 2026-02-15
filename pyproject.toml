@@ -1,0 +1,92 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hmt-calculator"
+version = "2.0.0"
+description = "Calculateur HMT Professionnel - Analyse hydraulique de systèmes de pompage"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Votre Nom", email = "votre.email@example.com"}
+]
+keywords = ["hydraulique", "pompage", "HMT", "engineering", "industrial"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "numpy>=1.21.0",
+    "matplotlib>=3.5.0",
+    "PyQt5>=5.15.0",
+    "reportlab>=4.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "black>=22.0",
+    "flake8>=4.0",
+    "mypy>=0.950",
+]
+
+[project.urls]
+Homepage = "https://github.com/votre-username/hmt-calculator"
+Documentation = "https://github.com/votre-username/hmt-calculator#readme"
+Repository = "https://github.com/votre-username/hmt-calculator"
+"Bug Tracker" = "https://github.com/votre-username/hmt-calculator/issues"
+
+[project.scripts]
+hmt-calculator = "main:main"
+
+[tool.setuptools]
+packages = ["models", "controllers", "views", "utils", "assets"]
+
+[tool.setuptools.package-data]
+assets = ["styles/*", "icons/*"]
+data = ["sample_pumps/*"]
+
+# Configuration Black (formateur de code)
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+# Configuration pytest
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
+
+# Configuration mypy (vérificateur de types)
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false

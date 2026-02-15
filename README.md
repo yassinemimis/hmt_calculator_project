@@ -1,50 +1,60 @@
-# Calculateur HMT Professionnel
+# 🚀 Calculateur HMT Professionnel
 
-Application professionnelle pour le calcul de la Hauteur Manométrique Totale (HMT) des systèmes de pompage.
+[![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PyQt5](https://img.shields.io/badge/GUI-PyQt5-green.svg)](https://www.riverbankcomputing.com/software/pyqt/)
 
-## 🚀 Fonctionnalités
+Application professionnelle pour le calcul de la **Hauteur Manométrique Totale (HMT)** des systèmes de pompage avec interface PyQt5 moderne.
 
-- ✅ Calcul HMT avec 3 méthodes de coefficient de frottement
-- ✅ Optimisation automatique du choix de pompe
-- ✅ Vérification NPSH (anti-cavitation)
-- ✅ Calcul économique complet
-- ✅ Visualisation graphique interactive
-- ✅ Export des résultats (TXT, JSON)
-- ✅ Interface moderne PyQt5
+![Industrial Engineering Design](https://img.shields.io/badge/Design-Industrial%20Engineering-1A73E8)
+
+---
+
+## ✨ Fonctionnalités
+
+- ✅ **Calcul HMT** avec 3 méthodes de coefficient de frottement
+  - Colebrook-White
+  - Haaland
+  - Swamee-Jain
+- ✅ **Optimisation automatique** du choix de pompe
+  - Pompe seule
+  - Montage en série
+  - Montage en parallèle
+  - Montage mixte
+- ✅ **Vérification NPSH** (anti-cavitation)
+- ✅ **Calcul économique** complet
+- ✅ **Visualisation graphique** interactive avec Matplotlib
+- ✅ **Export multi-format**
+  - TXT (rapport texte)
+  - JSON (données structurées)
+  - CSV (tableaux)
+  - PDF (rapport professionnel)
+- ✅ **Import pompes** JSON et CSV
+- ✅ **Interface moderne** PyQt5 avec thème Industrial Engineering
+
+---
 
 ## 📋 Prérequis
 
-- Python 3.7+
-- pip
+- Python 3.8 ou supérieur
+- pip (gestionnaire de paquets Python)
+
+---
 
 ## 🔧 Installation
 
+### Méthode 1 : Installation avec pip (recommandée)
+
 ```bash
-# Cloner le projet
-git clone https://github.com/votre-repo/hmt-calculator.git
+# Cloner le dépôt
+git clone https://github.com/votre-username/hmt-calculator.git
 cd hmt-calculator
 
-# Installer les dépendances
-pip install -r requirements.txt
-```
+# Installer avec pip
+pip install .
 
-## ▶️ Lancement
-
-### Windows
-```batch
-run.bat
-```
-
-### Linux/Mac
-```bash
-chmod +x run.sh
-./run.sh
-```
-
-### Manuel
-```bash
-python main.py
-```
+# Ou en mode développement
+pip install -e .
 
 ## 📚 Utilisation
 
