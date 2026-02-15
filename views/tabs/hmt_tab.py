@@ -39,7 +39,7 @@ class HMTTab(QWidget):
         diameter_layout.addWidget(
             QLabel("Diamètres à étudier (m, séparés par virgules):"), 1, 0
         )
-        self.diameters_input = QLineEdit("0.1, 0.15, 0.2, 0.25")
+        self.diameters_input = QLineEdit("")
         diameter_layout.addWidget(self.diameters_input, 1, 1)
         
         diameter_group.setLayout(diameter_layout)
@@ -81,15 +81,7 @@ class HMTTab(QWidget):
                 f"Dmin = {Dmin:.4f} m  ≤  D  ≤  Dmax = {Dmax:.4f} m"
             )
             
-            # Suggérer des diamètres
-            suggested = []
-            step = (Dmax - Dmin) / 5
-            for i in range(6):
-                suggested.append(Dmin + i * step)
-            
-            self.diameters_input.setText(
-                ", ".join([f"{d:.4f}" for d in suggested])
-            )
+          
             
             self.main_window.update_status("Plage de diamètres calculée", 3000)
         

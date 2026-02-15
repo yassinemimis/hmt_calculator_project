@@ -4,7 +4,7 @@ Custom Widgets pour Industrial Engineering UI
 from PyQt5.QtWidgets import (QFrame, QLabel, QVBoxLayout, QHBoxLayout, 
                              QPushButton, QWidget)
 from PyQt5.QtCore import Qt
-from assets.styles.theme import get_color
+from assets.styles.theme import THEME
 
 
 class Card(QFrame):
@@ -16,7 +16,7 @@ class Card(QFrame):
         self.setStyleSheet(f"""
             QFrame#card {{
                 background: white;
-                border: 1px solid {get_color('border')};
+                border: 1px solid {THEME['border']};
                 border-radius: 12px;
                 padding: 16px;
             }}
@@ -33,7 +33,7 @@ class Card(QFrame):
             # Divider
             divider = QFrame()
             divider.setFrameShape(QFrame.HLine)
-            divider.setStyleSheet(f"background: {get_color('divider')};")
+            divider.setStyleSheet(f"background: {THEME['divider']};")
             divider.setMaximumHeight(1)
             layout.addWidget(divider)
 
@@ -46,12 +46,12 @@ class StatCard(QFrame):
         self.setStyleSheet(f"""
             QFrame {{
                 background: white;
-                border: 2px solid {get_color('border')};
+                border: 2px solid {THEME['border']};
                 border-radius: 10px;
                 padding: 16px;
             }}
             QFrame:hover {{
-                border-color: {get_color('primary')};
+                border-color: {THEME['primary']};
             }}
         """)
         
@@ -59,18 +59,18 @@ class StatCard(QFrame):
         
         # Titre
         title_label = QLabel(title)
-        title_label.setStyleSheet(f"color: {get_color('text_secondary')}; font-size: 9pt;")
+        title_label.setStyleSheet(f"color: {THEME['text_secondary']}; font-size: 9pt;")
         layout.addWidget(title_label)
         
         # Valeur
         value_layout = QHBoxLayout()
         value_label = QLabel(str(value))
-        value_label.setStyleSheet(f"color: {get_color('primary')}; font-size: 20pt; font-weight: bold;")
+        value_label.setStyleSheet(f"color: {THEME['primary']}; font-size: 20pt; font-weight: bold;")
         value_layout.addWidget(value_label)
         
         if unit:
             unit_label = QLabel(unit)
-            unit_label.setStyleSheet(f"color: {get_color('text_secondary')}; font-size: 11pt;")
+            unit_label.setStyleSheet(f"color: {THEME['text_secondary']}; font-size: 11pt;")
             value_layout.addWidget(unit_label)
         
         value_layout.addStretch()
@@ -103,7 +103,7 @@ class SectionHeader(QWidget):
         line.setFrameShape(QFrame.HLine)
         line.setStyleSheet(f"""
             background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                stop:0 {get_color('primary')},
+                stop:0 {THEME['primary']},
                 stop:1 transparent);
             max-height: 3px;
             border-radius: 1px;
@@ -128,15 +128,15 @@ class InfoBox(QFrame):
         super().__init__(parent)
         
         colors = {
-            'info': get_color('info'),
-            'success': get_color('success'),
-            'warning': get_color('warning'),
-            'danger': get_color('danger')
+            'info': THEME['info'],
+            'success': THEME['success'],
+            'warning': THEME['warning'],
+            'danger': THEME['danger']
         }
         
         bg_colors = {
-            'info': get_color('primary_light'),
-            'success': get_color('accent_light'),
+            'info': THEME['primary_light'],
+            'success': THEME['accent_light'],
             'warning': '#FEF7E0',
             'danger': '#FCE8E6'
         }
@@ -170,5 +170,5 @@ class InfoBox(QFrame):
         # Texte
         text_label = QLabel(text)
         text_label.setWordWrap(True)
-        text_label.setStyleSheet(f"color: {get_color('text_primary')};")
+        text_label.setStyleSheet(f"color: {THEME['text_primary']};")
         layout.addWidget(text_label, 1)

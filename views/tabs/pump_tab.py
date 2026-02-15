@@ -1,14 +1,19 @@
 """
-Onglet de gestion des pompes - Support JSON & CSV
+Onglet de gestion des pompes - Avec bibliothèque système
 """
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
                              QTableWidget, QTableWidgetItem, QFileDialog,
                              QMessageBox, QHeaderView, QLabel, QDialog,
-                             QLineEdit, QGridLayout, QDialogButtonBox, QMenu)
+                             QLineEdit, QGridLayout, QDialogButtonBox, QMenu,
+                             QProgressDialog, QListWidget, QListWidgetItem,
+                             QAbstractItemView, QCheckBox)
 from PyQt5.QtCore import Qt
 from utils.file_handler import FileHandler
 from models.pump_model import PumpModel
 from views.widgets.custom_widgets import Card, SectionHeader, InfoBox, IconButton
+from config import SYSTEM_PUMPS_DIR
+import os
+import glob
 
 
 class PumpTab(QWidget):
@@ -25,13 +30,13 @@ class PumpTab(QWidget):
         # Header
         header = SectionHeader(
             "ÉTAPE 2 : Introduction des données des pompes",
-            "Importez des fichiers JSON/CSV ou créez les pompes manuellement"
+            "Choisissez dans la bibliothèque ou importez vos propres pompes"
         )
         layout.addWidget(header)
         
         # Info
         info = InfoBox(
-            "Formats supportés : JSON et CSV. Vous pouvez aussi ajouter des pompes manuellement.",
+            "Sélectionnez des pompes de la bibliothèque système ou importez vos propres fichiers JSON/CSV.",
             "info"
         )
         layout.addWidget(info)
@@ -42,33 +47,54 @@ class PumpTab(QWidget):
         
         buttons_layout = QHBoxLayout()
         
-        # Bouton Import avec menu déroulant
-        import_btn = IconButton("📁  Importer Fichier", "")
-        import_btn.clicked.connect(self.show_import_menu)
+        # Bouton Bibliothèque (NOUVEAU)
+        library_btn = IconButton("📚  Bibliothèque Système", "")
+        library_btn.setToolTip("Choisir des pompes depuis la bibliothèque")
+        library_btn.clicked.connect(self.show_library_dialog)
+        buttons_layout.addWidget(library_btn)
+        
+        # Bouton Import externe
+        import_btn = IconButton("📁  Importer Fichier(s)", "")
+        import_btn.setProperty("class", "secondary")
+        import_btn.setToolTip("Importer des fichiers JSON/CSV externes")
+        import_btn.clicked.connect(self.import_pumps_multi)
         buttons_layout.addWidget(import_btn)
         
-        # Bouton Export avec menu déroulant
-        export_btn = IconButton("💾  Exporter Pompe", "")
-        export_btn.setProperty("class", "secondary")
-        export_btn.clicked.connect(self.show_export_menu)
-        buttons_layout.addWidget(export_btn)
-        
+        # Bouton Ajouter manuellement
         add_btn = IconButton("➕  Ajouter Manuellement", "")
         add_btn.setProperty("class", "secondary")
         add_btn.clicked.connect(self.add_pump_manually)
         buttons_layout.addWidget(add_btn)
         
         actions_layout.addLayout(buttons_layout)
+        
+        # Deuxième ligne de boutons
+        buttons_layout2 = QHBoxLayout()
+        
+        # Bouton Export
+        export_btn = IconButton("💾  Exporter vers Bibliothèque", "")
+        export_btn.setProperty("class", "secondary")
+        export_btn.setToolTip("Sauvegarder une pompe dans la bibliothèque système")
+        export_btn.clicked.connect(self.export_to_library)
+        buttons_layout2.addWidget(export_btn)
+        
+        # Bouton Export externe
+        export_ext_btn = IconButton("📤  Exporter Externe", "")
+        export_ext_btn.setProperty("class", "secondary")
+        export_ext_btn.clicked.connect(self.show_export_menu)
+        buttons_layout2.addWidget(export_ext_btn)
+        
+        actions_layout.addLayout(buttons_layout2)
         layout.addWidget(actions_card)
         
         # Card Table
-        table_card = Card("Pompes Disponibles")
+        table_card = Card("Pompes Sélectionnées pour le Projet")
         table_layout = table_card.layout()
         
         self.pump_table = QTableWidget()
-        self.pump_table.setColumnCount(4)
+        self.pump_table.setColumnCount(5)
         self.pump_table.setHorizontalHeaderLabels([
-            'ID', 'Type de pompe', 'Nombre disponible', 'Points de données'
+            'ID', 'Type de pompe', 'Nombre disponible', 'Points', 'Source'
         ])
         
         header_table = self.pump_table.horizontalHeader()
@@ -76,6 +102,7 @@ class PumpTab(QWidget):
         header_table.setSectionResizeMode(1, QHeaderView.Stretch)
         header_table.setSectionResizeMode(2, QHeaderView.ResizeToContents)
         header_table.setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        header_table.setSectionResizeMode(4, QHeaderView.ResizeToContents)
         
         self.pump_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.pump_table.setAlternatingRowColors(True)
@@ -87,10 +114,15 @@ class PumpTab(QWidget):
         # Boutons de gestion
         manage_layout = QHBoxLayout()
         
-        delete_btn = IconButton("🗑️  Supprimer la sélection", "")
+        delete_btn = IconButton("🗑️  Supprimer sélection", "")
         delete_btn.setProperty("class", "danger")
         delete_btn.clicked.connect(self.delete_selected_pump)
         manage_layout.addWidget(delete_btn)
+        
+        clear_all_btn = IconButton("🗑️  Tout supprimer", "")
+        clear_all_btn.setProperty("class", "danger")
+        clear_all_btn.clicked.connect(self.clear_all_pumps)
+        manage_layout.addWidget(clear_all_btn)
         
         manage_layout.addStretch()
         
@@ -104,83 +136,174 @@ class PumpTab(QWidget):
         layout.addLayout(manage_layout)
         layout.addStretch()
     
-    def show_import_menu(self):
-        """Affiche un menu pour choisir JSON ou CSV"""
-        menu = QMenu(self)
-        
-        json_action = menu.addAction("📄 Importer JSON")
-        json_action.triggered.connect(self.import_pump_json)
-        
-        csv_action = menu.addAction("📊 Importer CSV")
-        csv_action.triggered.connect(self.import_pump_csv)
-        
-        # Afficher le menu au centre du bouton
-        sender = self.sender()
-        menu.exec_(sender.mapToGlobal(sender.rect().bottomLeft()))
+    def show_library_dialog(self):
+        """Affiche la boîte de dialogue de la bibliothèque"""
+        dialog = PumpLibraryDialog(self)
+        if dialog.exec_() == QDialog.Accepted:
+            selected_pumps = dialog.get_selected_pumps()
+            
+            if selected_pumps:
+                added_count = 0
+                for pump in selected_pumps:
+                    self.main_window.pumps.append(pump)
+                    added_count += 1
+                
+                self.update_pump_table()
+                
+                QMessageBox.information(
+                    self, "✓ Succès",
+                    f"{added_count} pompe(s) ajoutée(s) depuis la bibliothèque !"
+                )
+                self.main_window.update_status(
+                    f"✓ {added_count} pompe(s) chargée(s)", 3000
+                )
     
-    def show_export_menu(self):
-        """Affiche un menu pour exporter en JSON ou CSV"""
+    def import_pumps_multi(self):
+        """Importe plusieurs fichiers JSON/CSV externes"""
+        filenames, _ = QFileDialog.getOpenFileNames(
+            self, 
+            "Sélectionner un ou plusieurs fichiers de pompes",
+            "", 
+            "Tous les fichiers supportés (*.json *.csv);;Fichiers JSON (*.json);;Fichiers CSV (*.csv);;Tous les fichiers (*.*)"
+        )
+        
+        if not filenames:
+            return
+        
+        # Progress dialog pour plusieurs fichiers
+        if len(filenames) > 1:
+            progress = QProgressDialog(
+                "Importation des pompes...", 
+                "Annuler", 
+                0, 
+                len(filenames), 
+                self
+            )
+            progress.setWindowModality(Qt.WindowModal)
+            progress.setMinimumDuration(0)
+        else:
+            progress = None
+        
+        imported_count = 0
+        failed_files = []
+        
+        for idx, filename in enumerate(filenames):
+            if progress:
+                progress.setValue(idx)
+                progress.setLabelText(f"Importation de {os.path.basename(filename)}...")
+                
+                if progress.wasCanceled():
+                    break
+            
+            try:
+                if filename.lower().endswith('.json'):
+                    pump = FileHandler.load_pump_from_json(filename)
+                elif filename.lower().endswith('.csv'):
+                    pump = FileHandler.load_pump_from_csv(filename)
+                else:
+                    pump = FileHandler.load_pump_from_json(filename)
+                
+                self.main_window.pumps.append(pump)
+                imported_count += 1
+                
+            except Exception as e:
+                failed_files.append({
+                    'file': os.path.basename(filename),
+                    'error': str(e)
+                })
+        
+        if progress:
+            progress.setValue(len(filenames))
+        
+        self.update_pump_table()
+        
+        if imported_count > 0 and len(failed_files) == 0:
+            QMessageBox.information(
+                self, "✓ Succès",
+                f"{imported_count} pompe(s) importée(s) avec succès !"
+            )
+            self.main_window.update_status(
+                f"✓ {imported_count} pompe(s) importée(s)", 3000
+            )
+        elif imported_count > 0 and len(failed_files) > 0:
+            error_msg = f"{imported_count} pompe(s) importée(s).\n\n"
+            error_msg += f"⚠ {len(failed_files)} erreur(s):\n"
+            for failed in failed_files[:3]:
+                error_msg += f"• {failed['file']}\n"
+            
+            QMessageBox.warning(self, "⚠ Importation partielle", error_msg)
+        else:
+            QMessageBox.critical(self, "✗ Erreur", 
+                               "Aucune pompe n'a pu être importée")
+    
+    def export_to_library(self):
+        """Exporte une pompe vers la bibliothèque système"""
         selected_rows = self.pump_table.selectedIndexes()
         if not selected_rows:
             QMessageBox.warning(self, "⚠ Attention",
-                              "Veuillez sélectionner une pompe à exporter")
+                              "Veuillez sélectionner une pompe à sauvegarder")
+            return
+        
+        row = selected_rows[0].row()
+        pump = self.main_window.pumps[row]
+        
+        # Demander confirmation
+        reply = QMessageBox.question(
+            self, '❓ Confirmation',
+            f'Sauvegarder "{pump.type}" dans la bibliothèque système ?\n\n'
+            'Elle sera disponible pour tous vos futurs projets.',
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.Yes
+        )
+        
+        if reply == QMessageBox.Yes:
+            try:
+                # Générer nom de fichier
+                safe_name = pump.type.replace(' ', '_').replace('/', '_')
+                filename = os.path.join(SYSTEM_PUMPS_DIR, f"{safe_name}.json")
+                
+                # Vérifier si existe déjà
+                if os.path.exists(filename):
+                    overwrite = QMessageBox.question(
+                        self, '❓ Fichier existant',
+                        f'Une pompe "{pump.type}" existe déjà.\nÉcraser ?',
+                        QMessageBox.Yes | QMessageBox.No,
+                        QMessageBox.No
+                    )
+                    if overwrite == QMessageBox.No:
+                        return
+                
+                FileHandler.save_pump_to_json(pump, filename)
+                
+                QMessageBox.information(
+                    self, "✓ Succès",
+                    f'Pompe "{pump.type}" sauvegardée dans la bibliothèque !'
+                )
+                self.main_window.update_status("✓ Pompe ajoutée à la bibliothèque", 3000)
+                
+            except Exception as e:
+                QMessageBox.critical(self, "✗ Erreur",
+                                   f"Erreur lors de la sauvegarde:\n{str(e)}")
+    
+    def show_export_menu(self):
+        """Menu export externe"""
+        selected_rows = self.pump_table.selectedIndexes()
+        if not selected_rows:
+            QMessageBox.warning(self, "⚠ Attention",
+                              "Veuillez sélectionner une pompe")
             return
         
         menu = QMenu(self)
-        
-        json_action = menu.addAction("📄 Exporter en JSON")
+        json_action = menu.addAction("📄 Exporter JSON")
         json_action.triggered.connect(self.export_pump_json)
         
-        csv_action = menu.addAction("📊 Exporter en CSV")
+        csv_action = menu.addAction("📊 Exporter CSV")
         csv_action.triggered.connect(self.export_pump_csv)
         
         sender = self.sender()
         menu.exec_(sender.mapToGlobal(sender.rect().bottomLeft()))
     
-    def import_pump_json(self):
-        """Importe un fichier JSON"""
-        filename, _ = QFileDialog.getOpenFileName(
-            self, "Sélectionner un fichier JSON de pompe",
-            "", "Fichiers JSON (*.json);;Tous les fichiers (*.*)"
-        )
-        
-        if filename:
-            try:
-                pump = FileHandler.load_pump_from_json(filename)
-                self.main_window.pumps.append(pump)
-                self.update_pump_table()
-                
-                QMessageBox.information(self, "✓ Succès",
-                                      f"Pompe '{pump.type}' importée depuis JSON avec succès !")
-                self.main_window.update_status(f"✓ Pompe JSON importée : {pump.type}", 3000)
-            
-            except Exception as e:
-                QMessageBox.critical(self, "✗ Erreur",
-                                   f"Erreur lors de l'import JSON :\n{str(e)}")
-    
-    def import_pump_csv(self):
-        """Importe un fichier CSV"""
-        filename, _ = QFileDialog.getOpenFileName(
-            self, "Sélectionner un fichier CSV de pompe",
-            "", "Fichiers CSV (*.csv);;Tous les fichiers (*.*)"
-        )
-        
-        if filename:
-            try:
-                pump = FileHandler.load_pump_from_csv(filename)
-                self.main_window.pumps.append(pump)
-                self.update_pump_table()
-                
-                QMessageBox.information(self, "✓ Succès",
-                                      f"Pompe '{pump.type}' importée depuis CSV avec succès !")
-                self.main_window.update_status(f"✓ Pompe CSV importée : {pump.type}", 3000)
-            
-            except Exception as e:
-                QMessageBox.critical(self, "✗ Erreur",
-                                   f"Erreur lors de l'import CSV :\n{str(e)}")
-    
     def export_pump_json(self):
-        """Exporte la pompe sélectionnée en JSON"""
         selected_rows = self.pump_table.selectedIndexes()
         if not selected_rows:
             return
@@ -189,23 +312,19 @@ class PumpTab(QWidget):
         pump = self.main_window.pumps[row]
         
         filename, _ = QFileDialog.getSaveFileName(
-            self, "Exporter la pompe en JSON",
+            self, "Exporter en JSON",
             f"{pump.type.replace(' ', '_')}.json",
-            "Fichiers JSON (*.json);;Tous les fichiers (*.*)"
+            "Fichiers JSON (*.json)"
         )
         
         if filename:
             try:
                 FileHandler.save_pump_to_json(pump, filename)
-                QMessageBox.information(self, "✓ Succès",
-                                      f"Pompe exportée en JSON :\n{filename}")
-                self.main_window.update_status(f"✓ Export JSON réussi", 3000)
+                QMessageBox.information(self, "✓ Succès", "Export JSON réussi")
             except Exception as e:
-                QMessageBox.critical(self, "✗ Erreur",
-                                   f"Erreur lors de l'export JSON :\n{str(e)}")
+                QMessageBox.critical(self, "✗ Erreur", str(e))
     
     def export_pump_csv(self):
-        """Exporte la pompe sélectionnée en CSV"""
         selected_rows = self.pump_table.selectedIndexes()
         if not selected_rows:
             return
@@ -214,20 +333,17 @@ class PumpTab(QWidget):
         pump = self.main_window.pumps[row]
         
         filename, _ = QFileDialog.getSaveFileName(
-            self, "Exporter la pompe en CSV",
+            self, "Exporter en CSV",
             f"{pump.type.replace(' ', '_')}.csv",
-            "Fichiers CSV (*.csv);;Tous les fichiers (*.*)"
+            "Fichiers CSV (*.csv)"
         )
         
         if filename:
             try:
                 FileHandler.save_pump_to_csv(pump, filename)
-                QMessageBox.information(self, "✓ Succès",
-                                      f"Pompe exportée en CSV :\n{filename}")
-                self.main_window.update_status(f"✓ Export CSV réussi", 3000)
+                QMessageBox.information(self, "✓ Succès", "Export CSV réussi")
             except Exception as e:
-                QMessageBox.critical(self, "✗ Erreur",
-                                   f"Erreur lors de l'export CSV :\n{str(e)}")
+                QMessageBox.critical(self, "✗ Erreur", str(e))
     
     def add_pump_manually(self):
         dialog = AddPumpDialog(self)
@@ -239,18 +355,16 @@ class PumpTab(QWidget):
                 self.update_pump_table()
                 
                 QMessageBox.information(self, "✓ Succès",
-                                      f"Pompe '{pump.type}' ajoutée avec succès !")
-                self.main_window.update_status(f"✓ Pompe ajoutée : {pump.type}", 3000)
-            
+                                      f"Pompe '{pump.type}' ajoutée !")
+                self.main_window.update_status(f"✓ Pompe ajoutée", 3000)
             except Exception as e:
-                QMessageBox.critical(self, "✗ Erreur",
-                                   f"Erreur lors de l'ajout :\n{str(e)}")
+                QMessageBox.critical(self, "✗ Erreur", str(e))
     
     def delete_selected_pump(self):
         selected_rows = self.pump_table.selectedIndexes()
         if not selected_rows:
             QMessageBox.warning(self, "⚠ Attention",
-                              "Veuillez sélectionner une pompe à supprimer")
+                              "Sélectionnez une pompe")
             return
         
         row = selected_rows[0].row()
@@ -258,7 +372,7 @@ class PumpTab(QWidget):
         
         reply = QMessageBox.question(
             self, '❓ Confirmation',
-            f'Voulez-vous vraiment supprimer la pompe :\n"{pump_type}" ?',
+            f'Supprimer "{pump_type}" ?',
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No
         )
@@ -267,6 +381,23 @@ class PumpTab(QWidget):
             del self.main_window.pumps[row]
             self.update_pump_table()
             self.main_window.update_status("✓ Pompe supprimée", 3000)
+    
+    def clear_all_pumps(self):
+        if not self.main_window.pumps:
+            return
+        
+        reply = QMessageBox.question(
+            self, '❓ Confirmation',
+            f'Supprimer TOUTES les pompes ({len(self.main_window.pumps)}) ?',
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        
+        if reply == QMessageBox.Yes:
+            count = len(self.main_window.pumps)
+            self.main_window.pumps.clear()
+            self.update_pump_table()
+            self.main_window.update_status(f"✓ {count} pompe(s) supprimée(s)", 3000)
     
     def update_pump_table(self):
         self.pump_table.setRowCount(0)
@@ -280,23 +411,136 @@ class PumpTab(QWidget):
             self.pump_table.setItem(row, 2, QTableWidgetItem(str(pump.nombre)))
             self.pump_table.setItem(row, 3, QTableWidgetItem(str(len(pump.Qp))))
             
-            for col in [0, 2, 3]:
+            # Source
+            source = getattr(pump, 'source', 'Externe')
+            self.pump_table.setItem(row, 4, QTableWidgetItem(source))
+            
+            for col in [0, 2, 3, 4]:
                 self.pump_table.item(row, col).setTextAlignment(Qt.AlignCenter)
     
     def validate_pumps(self):
         if not self.main_window.pumps:
             QMessageBox.warning(self, "⚠ Attention",
-                              "Veuillez importer au moins une pompe")
+                              "Veuillez sélectionner au moins une pompe")
             return
         
         QMessageBox.information(self, "✓ Validation réussie",
-                              f"{len(self.main_window.pumps)} pompe(s) enregistrée(s).\n"
-                              "Vous pouvez passer à l'étape suivante.")
+                              f"{len(self.main_window.pumps)} pompe(s) validée(s).")
         
         self.main_window.update_status(
             f"✓ {len(self.main_window.pumps)} pompe(s) validée(s)", 3000
         )
         self.main_window.tabs.setCurrentIndex(2)
+
+
+class PumpLibraryDialog(QDialog):
+    """Dialogue de sélection depuis la bibliothèque"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Bibliothèque de Pompes Système")
+        self.setModal(True)
+        self.resize(700, 500)
+        self.selected_pumps = []
+        self.init_ui()
+        self.load_library()
+    
+    def init_ui(self):
+        layout = QVBoxLayout(self)
+        
+        # Header
+        header = QLabel("📚 Sélectionnez les pompes pour votre projet")
+        header.setProperty("class", "section-title")
+        layout.addWidget(header)
+        
+        info = InfoBox(
+            "Cochez les pompes que vous souhaitez utiliser. Vous pouvez en sélectionner plusieurs.",
+            "info"
+        )
+        layout.addWidget(info)
+        
+        # Liste avec checkboxes
+        self.pump_list = QListWidget()
+        self.pump_list.setAlternatingRowColors(True)
+        self.pump_list.setMinimumHeight(300)
+        layout.addWidget(self.pump_list)
+        
+        # Boutons
+        button_layout = QHBoxLayout()
+        
+        select_all_btn = QPushButton("Tout sélectionner")
+        select_all_btn.clicked.connect(self.select_all)
+        button_layout.addWidget(select_all_btn)
+        
+        deselect_all_btn = QPushButton("Tout désélectionner")
+        deselect_all_btn.clicked.connect(self.deselect_all)
+        button_layout.addWidget(deselect_all_btn)
+        
+        button_layout.addStretch()
+        layout.addLayout(button_layout)
+        
+        # Boutons OK/Cancel
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+        )
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+    
+    def load_library(self):
+        """Charge les pompes de la bibliothèque"""
+        self.pump_list.clear()
+        self.library_pumps = []
+        
+        # Chercher tous les fichiers JSON dans le dossier système
+        json_files = glob.glob(os.path.join(SYSTEM_PUMPS_DIR, "*.json"))
+        
+        if not json_files:
+            item = QListWidgetItem("⚠ Aucune pompe dans la bibliothèque")
+            item.setFlags(Qt.NoItemFlags)
+            self.pump_list.addItem(item)
+            return
+        
+        for filepath in sorted(json_files):
+            try:
+                pump = FileHandler.load_pump_from_json(filepath)
+                pump.source = "Bibliothèque"  # Marquer la source
+                self.library_pumps.append(pump)
+                
+                # Créer item avec checkbox
+                item_text = f"{pump.type} ({pump.nombre} disponibles, {len(pump.Qp)} points)"
+                item = QListWidgetItem(item_text)
+                item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+                item.setCheckState(Qt.Unchecked)
+                item.setData(Qt.UserRole, pump)
+                
+                self.pump_list.addItem(item)
+                
+            except Exception as e:
+                print(f"Erreur chargement {filepath}: {e}")
+    
+    def select_all(self):
+        for i in range(self.pump_list.count()):
+            item = self.pump_list.item(i)
+            if item.flags() & Qt.ItemIsUserCheckable:
+                item.setCheckState(Qt.Checked)
+    
+    def deselect_all(self):
+        for i in range(self.pump_list.count()):
+            item = self.pump_list.item(i)
+            if item.flags() & Qt.ItemIsUserCheckable:
+                item.setCheckState(Qt.Unchecked)
+    
+    def get_selected_pumps(self):
+        """Retourne les pompes sélectionnées"""
+        selected = []
+        for i in range(self.pump_list.count()):
+            item = self.pump_list.item(i)
+            if item.checkState() == Qt.Checked:
+                pump = item.data(Qt.UserRole)
+                if pump:
+                    selected.append(pump)
+        return selected
 
 
 class AddPumpDialog(QDialog):
