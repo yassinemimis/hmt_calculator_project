@@ -248,7 +248,7 @@ class PDFReportGenerator:
         self.story.append(Spacer(1, 1*cm))
     
     def add_economic_analysis(self, main_window):
-        """Section 5: Analyse économique"""
+        """Section 6: Analyse économique"""
         if not main_window.economic_data:
             return
         
@@ -286,54 +286,6 @@ class PDFReportGenerator:
         self.story.append(table)
         self.story.append(Spacer(1, 1*cm))
     
-    def add_hmt_details(self, main_window):
-        """Section 6: Détails des calculs HMT"""
-        if not main_window.hmt_results:
-            return
-        
-        self.story.append(PageBreak())
-        
-        self.story.append(Paragraph(
-            "6. DÉTAILS DES CALCULS HMT",
-            self.styles['SectionTitle']
-        ))
-        
-        for result in main_window.hmt_results:
-            D = result['D']
-            
-            self.story.append(Paragraph(
-                f"Diamètre D = {D:.4f} m ({D*1000:.1f} mm)",
-                self.styles['SubTitle']
-            ))
-            
-            data = [
-                ['Paramètre', 'Valeur', 'Unité'],
-                ['Vitesse (V)', f"{result['V']:.4f}", 'm/s'],
-                ['Reynolds (Re)', f"{result['Re']:.2f}", '-'],
-                ['Coefficient frottement (f)', f"{result['f']:.6f}", '-'],
-                ['Pertes singulières (K_T)', f"{result['K_T']:.6f}", '-'],
-                ['Coefficient réseau (A)', f"{result['A']:.6f}", '-'],
-                ['Hauteur géométrique (Hg)', f"{result['Hg']:.4f}", 'm'],
-                ['Pertes de charge (Δh)', f"{result['Dh']:.4f}", 'm'],
-                ['HMT', f"{result['HMT']:.4f}", 'm'],
-            ]
-            
-            table = Table(data, colWidths=[8*cm, 4*cm, 3*cm])
-            table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#9334E6')),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-                ('GRID', (0, 0), (-1, -1), 1, colors.grey),
-                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F3E5F5')]),
-                ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#E1BEE7')),
-                ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-            ]))
-            
-            self.story.append(table)
-            self.story.append(Spacer(1, 0.5*cm))
     
     def add_graph(self, main_window):
         """Ajoute un graphique au PDF"""
@@ -388,9 +340,9 @@ class PDFReportGenerator:
             plt.close()
             
             # Ajouter au PDF
-            self.story.append(PageBreak())
+           # self.story.append(PageBreak())
             self.story.append(Paragraph(
-                "7. GRAPHIQUE - POINT DE FONCTIONNEMENT",
+                "5. GRAPHIQUE - POINT DE FONCTIONNEMENT",
                 self.styles['SectionTitle']
             ))
             
@@ -422,10 +374,9 @@ class PDFReportGenerator:
         self.add_optimal_solution(main_window)
         self.add_pump_configuration(main_window)
         self.add_npsh_verification(main_window)
-        self.add_economic_analysis(main_window)
-        self.add_hmt_details(main_window)
         self.add_graph(main_window)
-        self.add_footer()
+        self.add_economic_analysis(main_window)
+        #self.add_footer()
         
         # Construire le PDF
         self.doc.build(self.story)
