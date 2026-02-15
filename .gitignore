@@ -1,0 +1,369 @@
+# ============================================================================
+# Python
+# ============================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# ============================================================================
+# PyQt5 / Qt
+# ============================================================================
+
+# Qt Creator
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+
+# Qt compiled files
+*.qm
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+
+# ============================================================================
+# IDEs et Éditeurs
+# ============================================================================
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+.idea_modules/
+
+# VSCode
+.vscode/
+*.code-workspace
+.history/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.*.swp
+.*.swo
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# Spyder
+.spyproject
+
+# ============================================================================
+# Système d'exploitation
+# ============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ============================================================================
+# Projet spécifique
+# ============================================================================
+
+# Fichiers de données générés
+data/generated/
+data/exports/
+output/
+exports/
+
+# Logs
+logs/
+*.log
+
+# Rapports générés
+rapports/
+rapport_*.txt
+rapport_*.pdf
+rapport_*.json
+rapport_*.csv
+
+# Fichiers temporaires
+temp/
+tmp/
+*.tmp
+*.bak
+*.old
+
+# Fichiers de configuration locale
+config.local.py
+settings.local.py
+.env.local
+
+# Base de données
+*.db
+*.sqlite
+*.sqlite3
+
+# Sauvegardes
+backup/
+*.backup
+
+# Cache matplotlib
+.matplotlib/
+
+# ============================================================================
+# Build / Compilation
+# ============================================================================
+
+# setuptools
+build/
+dist/
+*.egg-info/
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# ============================================================================
+# Documentation
+# ============================================================================
+
+# Sphinx
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# ============================================================================
+# Données sensibles (NE JAMAIS COMMITTER)
+# ============================================================================
+
+# Fichiers secrets
+secrets/
+*.secret
+*.key
+*.pem
+*.cer
+*.crt
+credentials.json
+auth.json
+
+# Données personnelles
+*.personal
+private/
+
+# ============================================================================
+# Fichiers volumineux / Binaires
+# ============================================================================
+
+# Fichiers binaires
+*.exe
+*.dll
+*.dylib
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Images volumineuses (garder les petites)
+# *.png
+# *.jpg
+# *.jpeg
+
+# Vidéos
+*.mp4
+*.avi
+*.mov
+
+# ============================================================================
+# Tests
+# ============================================================================
+
+# Données de test volumineuses
+tests/data/large/
+tests/output/
+
+# ============================================================================
+# Divers
+# ============================================================================
+
+# Fichiers de verrouillage
+*.lock
+
+# Notes personnelles
+TODO.md
+NOTES.md
+*.notes
+
+# Fichiers de sauvegarde des éditeurs
+*.orig
